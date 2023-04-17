@@ -10,6 +10,7 @@ Using Steps
 2. Edit the the configurations at the top of cldup
 
      BASEDIR='/volume1'  #The base of the dir tree be scanned for duplicated files. Change it to your dir. The default is for synology NAS volume1.
+     
      FILE_LIST_DB=~/.allfiles.n.db  #specify the name of database file. The default name is OK for most of users.
      
 3. Run with -u option to create the database. It will take a few minutes to hours, depends on the volume of your files.
