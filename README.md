@@ -5,7 +5,7 @@ CLean up DUPlicated files: A bash CML script that finds out/cleans up duplicated
 Using Steps
 1. Download the file cldup and make it executable:
 
-   chmod +x cldup
+     chmod +x cldup
    
 2. Edit the the configurations at the top of cldup
 
