@@ -1,0 +1,398 @@
+#!/bin/bash
+
+#home: https://github.com/jkzhang2019/cldup
+
+
+#CONFIGUTATIONS 
+#1.PATH NAME of the database file:
+FILE_LIST_DB=~/.allfiles.n.db
+
+#2.DIR(s) to be covered
+#DIR(s).  ATTENTION: There must be NO '/' ad the end of the path name.
+BASEDIR='/volume1'
+
+
+
+
+
+
+PID=$$
+
+TMP=/tmp/cldup.$PID
+
+DEBUG_FLAG=0  # 1 for debugging
+
+
+LANG=en_US.utf8 
+
+appname=`basename ${0}`
+
+usage()
+{
+    echo "$appname: $1"  1>&2
+    echo "Usage: $appname [-l] | { [-u] [-f] [-i] } file(s)."  1>&2
+    echo "  -l: List duplicated files only. NOT remove file(s)."  1>&2
+    echo "  -u: Update database. It might take a long time of hours."  1>&2
+    echo "  -f: Force clean. No prompt before removing duplicated files."  1>&2
+    echo "  -i: diaplay Information. Print detailed information of duplicated files."  1>&2
+    echo "  -h: Help."  1>&2
+    exit -1
+}
+
+FLAG_TESTONLY=0
+FLAG_UPDATE=0
+FLAG_FORCE=0
+FLAG_RICHINFO=0
+
+FIRST_FILE_PARAM=0
+while getopts "lufih"  opt; do
+    FIRST_FILE_PARAM=1
+    case "${opt}"  in
+        l)
+            FLAG_TESTONLY=1
+            FLAG_RICHINFO=1
+            ;;
+        u)
+            FLAG_UPDATE=1
+            ;;
+        f)
+            FLAG_FORCE=1
+            ;;
+        i)
+            FLAG_RICHINFO=1
+            ;;
+        h)
+            echo "Clean up duplicated files."
+            usage "$appname checks files of duplicated copies based on a database file. The database file is create or updated by scanning the file system(launch $appname with -u option). You need to update the database file for accurate result."
+            exit 0
+            ;;
+        *)
+            usage "Try '$appname -h' for more information."
+            exit -1;
+    esac
+done
+
+
+if [ $DEBUG_FLAG -ne 0 ] ; then
+    echo FLAG_TESTONLY:$FLAG_TESTONLY
+    echo FLAG_UPDATE:$FLAG_UPDATE
+    echo FLAG_FORCE:$FLAG_FORCE
+    echo FLAG_RICHINFO:$FLAG_RICHINFO
+fi
+
+if [ $FLAG_UPDATE -ne 0 ] ; then
+
+echo "Updating databse. It will take a few minutes to hours."
+
+
+
+echo $PID > /tmp/cldup.pid
+
+
+FILE_LIST=$TMP/allfiles.1.cur.nisd.$PID
+
+FILE_LIST_DB_SORTED=$TMP/allfiles.2.db.$PID
+FILE_LIST_DB_SORTED_NISD=$TMP/allfiles.2.db.nisd.$PID
+FILE_LIST_DIFF=$TMP/allfiles.3.diff.nisd.$PID
+
+FILE_LIST_UPDATE_NISD=$TMP/allfiles.4.updating.nisd.$PID
+FILE_LIST_UPDATE=$TMP/allfiles.4.updating.n.$PID
+FILE_LIST_UPDATE_INFO=$TMP/allfiles.4.updating.isd.$PID
+
+
+FILE_LIST_NEWDB=$TMP/allfiles.6.db.keepfornewdb.$PID
+
+
+FILE_LIST_DB_REMOVED=$TMP/allfiles.7.db.removed.$PID
+
+FILE_LIST_DB_REMOVED_FINFO=$TMP/allfiles.7.db.removed.kisd.$PID
+
+FILE_LIST_DB_REMOVED_FINFO_CMP=$TMP/allfiles.7.db.removed.isd.$PID
+
+
+FILE_LIST_NAMES=$TMP/allfiles.names.$PID
+
+
+
+
+
+mkdir -p $TMP
+
+
+listit()
+{
+#Works ONLY when IFS is $'\n' !!!
+
+    sed_exp="s/^\s*\([0-9]\+\) .* \([0-9]\+\) \([0-9]\{4\}-.*\) .[0-9]\{4\} .*\"\(.*\)\"/\4|\1|\2|\3/g"
+         #for `ls -a -Q --full-time $1`, which as no inode:
+         #"s/^.* \([0-9]\+\) \([0-9]\{4\}-.*\) .[0-9]\{4\} .*\"\(.*\)\"/\3|\1|\2/g"
+
+    #echo "<<<<<<<"
+    #echo "1----"
+    #ls -i -a -Q --full-time $1
+    #echo "2----"
+    #ls -i -a -Q --full-time $1 | grep "^\s*[0-9]\+ -"
+    #echo "3----"
+    #ls -i -a -Q --full-time $1 | grep "^\s*[0-9]\+ -" | sed -e "$sed_exp"
+    #echo ">>>>>>>"
+    for each in `ls -i -a -Q --full-time $1 | grep "^\s*[0-9]\+ -" | sed -e "$sed_exp" ` ; do
+
+        echo $1/$each
+        #echo $1 : $each
+    done
+}
+
+
+
+
+FILE_LIST_ORG=$TMP/allfiles.list.org.$PID
+OLDIFS=$IFS
+IFS=$'\n'
+for each in `find $BASEDIR -type d -not -path "/@*" -not -path "/**/@*" -not -path "*/#recycle" -not -path "*/#recycle/*" 2>/dev/null ` ; do
+    listit $each  >> $FILE_LIST_ORG
+done
+IFS=$OLDIFS
+
+sort $FILE_LIST_ORG > $FILE_LIST
+rm $FILE_LIST_ORG
+
+
+if [ ! -f $FILE_LIST_DB ]; then
+    touch $FILE_LIST_DB
+fi
+
+sort -k1.12 $FILE_LIST_DB  > $FILE_LIST_DB_SORTED
+cat $FILE_LIST_DB_SORTED | sed -e "s/^.*|\(.*|.*|.*|.*\)$/\1/g" >  $FILE_LIST_DB_SORTED_NISD
+
+
+diff -a $FILE_LIST  $FILE_LIST_DB_SORTED_NISD  > $FILE_LIST_DIFF
+
+#cat $FILE_LIST_DIFF | grep -E "^<" | sort -k2 > $FILE_LIST_UPDATE_NISD
+cat $FILE_LIST_DIFF | grep -E "^<" | sed "s/^< \(.*\)|\(.*\)|\(.*\)/\1z\2z\3/g" | sort --field-separator=\| -k2 | sed "s/\(.*|.*\)z\(.*\)z\(.*\)/\1|\2|\3/g" > $FILE_LIST_UPDATE_NISD
+
+cat $FILE_LIST_UPDATE_NISD |  sed -e "s/^\(.*\)|.*|.*|.*$/\1/g" > $FILE_LIST_UPDATE 
+
+cat $FILE_LIST_UPDATE_NISD | sed -e "s/^.*|\(.*|.*|.*\)$/\1/g" > $FILE_LIST_UPDATE_INFO
+#cat $FILE_LIST_DIFF | grep -E "^<" | sed -e "s/^< .*|\(.*|.*|.*\)$/\1/g" | sort > $FILE_LIST_UPDATE_INFO 
+
+
+##########
+# Removing OutOfDate records according the diff result
+SedDeleteCmd=""       
+for each in `cat $FILE_LIST_DIFF | grep ^[0-9] | grep -E "c|a" | sed -e "s/^.*[a|c]\(.*\)$/\1d/g"`; do
+   SedDeleteCmd=$SedDeleteCmd";"$each
+done
+
+if [ "$SedDeleteCmd" != "" ] ; then
+    cat $FILE_LIST_DB_SORTED |  sed  -e $SedDeleteCmd > $FILE_LIST_NEWDB
+else
+    cp $FILE_LIST_DB_SORTED $FILE_LIST_NEWDB
+fi
+##########
+
+
+diff -a $FILE_LIST_DB_SORTED  $FILE_LIST_NEWDB | grep -E "^<" | sed -e "s/^< \(.*\)/\1/g" > $FILE_LIST_DB_REMOVED
+
+#echo "cat $FILE_LIST_DB_REMOVED | sed -e "s/^\(.*\)|.*\(|.*|.*|.*\)/\1\2/g" | sort -k1.12 > $FILE_LIST_DB_REMOVED_FINFO"
+cat $FILE_LIST_DB_REMOVED | sed -e "s/^\(.*\)|.*\(|.*|.*|.*\)/\1\2/g" | sort -k1.12 > $FILE_LIST_DB_REMOVED_FINFO
+
+cat $FILE_LIST_DB_REMOVED_FINFO | sed -e "s/.*|\(.*|.*|.*\)/\1/g" > $FILE_LIST_DB_REMOVED_FINFO_CMP
+
+
+FILE_INFO_DIFF=$TMP/allfiles.8.db.removed.isd.diff.$PID
+FILE_INFO_REUSE=$TMP/allfiles.9.db.removed.kisd.reuse.$PID
+diff -a $FILE_LIST_UPDATE_INFO $FILE_LIST_DB_REMOVED_FINFO_CMP  > $FILE_INFO_DIFF
+
+
+##########
+# Removing OutOfDate records according the diff result
+SedDeleteCmd=""       
+for each in `cat $FILE_INFO_DIFF | grep ^[0-9] | grep -E "c|a" | sed -e "s/^.*[a|c]\(.*\)$/\1d/g"`; do
+   SedDeleteCmd=$SedDeleteCmd";"$each
+done
+
+if [ "$SedDeleteCmd" != "" ] ; then
+    cat $FILE_LIST_DB_REMOVED_FINFO |  sed  -e $SedDeleteCmd > $FILE_INFO_REUSE
+else
+    cp  $FILE_LIST_DB_REMOVED_FINFO $FILE_INFO_REUSE
+fi
+##########
+
+
+
+FILE_UPDATE_BYREUSE=$TMP/allfiles.9.db.updateby.reuse.$PID
+##########
+# Removing OutOfDate records according the diff result
+SedDeleteCmd=""       
+for each in `cat $FILE_INFO_DIFF | grep ^[0-9] | grep -E "c|d" | sed -e "s/^\(.*\)[d|c].*$/\1d/g"`; do
+   SedDeleteCmd=$SedDeleteCmd";"$each
+done
+
+if [ "$SedDeleteCmd" != "" ] ; then
+    cat $FILE_LIST_UPDATE_NISD |  sed  -e $SedDeleteCmd > $FILE_UPDATE_BYREUSE
+else
+    cp $FILE_LIST_UPDATE_NISD $FILE_UPDATE_BYREUSE
+fi
+
+FILE_UPDATE_BYSCAN=$TMP/allfiles.9.db.updateby.scan.$PID
+##########
+diff -a $FILE_LIST_UPDATE_NISD $FILE_UPDATE_BYREUSE | grep "^< " | sed -e "s/^< \(.*\)|.*|.*|.*/\1/g" > $FILE_UPDATE_BYSCAN
+
+
+
+OLDIFS=$IFS
+IFS=$'\n'
+
+for each in `cat $FILE_UPDATE_BYREUSE`; do
+    filename=`echo $each | sed -e "s/\(.*\)|.*|.*|.*/\1/g"`
+    fileinfo=`echo $each | sed -e "s/.*\(|.*|.*|.*\)/\1/g"`
+    cksm=`grep "$fileinfo" $FILE_INFO_REUSE | sed -e "s/\(.*\)|.*|.*|.*/\1/g"`
+    echo $cksm"|"$filename$fileinfo  >>$TMP/allfiles.db.new.byreuse.$PID
+done
+
+
+
+
+
+
+sed_exp="s/^\s*\([0-9]\+\) .* \([0-9]\+\) \([0-9]\{4\}-.*\) .[0-9]\{4\} .*\"\(.*\)\"/\4|\1|\2|\3/g"
+
+
+for eachfile in `cat $FILE_UPDATE_BYSCAN`; do
+if [ -f $eachfile ] ; then
+
+    CKSUM=`cksum $eachfile | sed -e "s/^\([0-9]*\) .*/\1/g"`
+
+    UPDATESTR=`printf "%0*d" 10 $CKSUM`\|`ls -i -a -Q --full-time $eachfile | sed -e "$sed_exp" `
+    echo $UPDATESTR >>$TMP/allfiles.db.new.byscan.$PID
+fi
+done
+
+
+cat $FILE_LIST_NEWDB $TMP/allfiles.db.new.byreuse.$PID  $TMP/allfiles.db.new.byscan.$PID  | sort > $FILE_LIST_DB
+
+
+
+
+
+#for eachfile in `cat $FILE_LIST_UPDATE`; do
+#if [ -f $eachfile ] ; then
+#
+#    CKSUM=`cksum $eachfile | sed -e "s/^\([0-9]*\) .*/\1/g"`
+#
+#    UPDATESTR=`printf "%0*d" 10 $CKSUM`\|`ls -i -a -Q --full-time $eachfile | sed -e "$sed_exp" `
+#    echo $UPDATESTR >>$FILE_LIST_NEWDB
+#fi
+#done
+#sort $FILE_LIST_NEWDB | uniq > $FILE_LIST_DB
+
+
+IFS=$OLDIFS
+
+rm $TMP/allfiles.*.$PID
+
+rmdir $TMP
+
+
+rm /tmp/cldup.pid
+
+echo "Database updated"
+fi
+
+if [ ! -f $FILE_LIST_DB ]; then
+    usage "Database not found. Run with -u option to create."
+fi
+
+if [ $DEBUG_FLAG -ne 0 ]; then
+    echo 'DEBUG: Begin to check duplicated files'
+fi
+
+
+if [ $FLAG_FORCE -eq 0 ];
+then
+    RM_OPTION='-i'
+else
+    RM_OPTION=""
+fi
+
+params=("$@")
+
+for ((i = $FIRST_FILE_PARAM; i<${#params[@]}; i++)); do
+
+    FILENAME=${params[$i]}
+
+    if [ ! -f "$FILENAME" ];
+    then
+		if [ ! -d "$FILENAME" ];
+		then
+			echo "ERROR: File "$FILENAME" Does Not Exist." >&2
+		fi
+        continue
+    fi
+
+    if [ $DEBUG_FLAG -ne 0 ]; then
+        echo "**************************"
+        echo "*** Test File:"$FILENAME
+    fi
+    CHKSUMINFO=`cksum "$FILENAME" | sed -e "s/^\([0-9]*\) .*/\1/g"`
+   
+    CHKSUM_FILTER=\^`printf "%0*d" 10 $CHKSUMINFO`\|
+
+    FILEID=`ls -i "$FILENAME" | sed -e "s/^\([0-9]*\) .*/\1/g"`
+    OLDIFS=$IFS
+    IFS=$'\n'
+
+    MD5=""
+
+    DUPLICATED_FILE_CNT=0
+    for each in `grep $CHKSUM_FILTER  $FILE_LIST_DB` ; do
+        if [ $DEBUG_FLAG -ne 0 ];
+        then
+            echo 'DEBUG: A match from the DB:'$each
+        fi
+        TARGET_FILE_NAME=`echo $each | sed -e 's/^[0-9]*|\(.*\)|.*|.*|.*$/\1/g'`
+
+        if [ -f $TARGET_FILE_NAME ];
+        then
+            TARGETFILEID=`ls -i $TARGET_FILE_NAME | sed -e "s/^\([0-9]*\) .*/\1/g"`
+
+            if [ $DEBUG_FLAG -ne 0 ]; then
+                echo FILEID:$FILEID
+                echo TARGETFILEID:$TARGETFILEID
+            fi
+
+            if [ $FILEID -ne $TARGETFILEID ];
+            then
+                if [ $MD5=="" ];
+                then
+                    MD5=`md5sum "$FILENAME" | sed -e 's/\([0-9,a-f]*\) .*/\1/g' `
+                fi
+                TARGET_MD5=`md5sum "$TARGET_FILE_NAME" | sed -e 's/\([0-9,a-f]*\) .*/\1/g' `
+                if [ $DEBUG_FLAG -ne 0 ]; then
+                    echo 'DEBUG: MD5 and the target MD5 are ' $MD5 ' and ' $TARGET_MD5
+                fi
+                if [ $TARGET_MD5==$MD5 ]; then
+                    let DUPLICATED_FILE_CNT++
+                    if [ $FLAG_RICHINFO -ne 0 ]; then
+                        echo $FILENAME is duplicated file of $TARGET_FILE_NAME
+                    fi
+                    if [ $FLAG_TESTONLY -eq 0 ]; then
+                        rm $RM_OPTION  $FILENAME
+                        break
+                    fi
+                fi
+            fi
+        fi
+
+    done
+    if  [ $FLAG_RICHINFO -ne 0 ]; then
+        if [ $DUPLICATED_FILE_CNT -ne 0 ]; then
+            echo "Totally "$DUPLICATED_FILE_CNT" matches found."
+        else
+            echo "$FILENAME is a distinct file."
+        fi
+    fi
+    IFS=$OLDIFS
+done
+
+
