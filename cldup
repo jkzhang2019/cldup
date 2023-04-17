@@ -4,12 +4,16 @@
 
 
 #CONFIGUTATIONS 
-#1.PATH NAME of the database file:
+
+#1.DIR(s) to be covered
+#DIR(s).  ATTENTION: There must be NO '/' at the end of the path name.  More than one dirs could be listed with space as separators.
+#the default value '/volume1' is for synology NAS.
+BASEDIRS='/volume1'    
+
+#2.PATH NAME of the database file(the default name is ok for most users)
 FILE_LIST_DB=~/.allfiles.n.db
 
-#2.DIR(s) to be covered
-#DIR(s).  ATTENTION: There must be NO '/' ad the end of the path name.
-BASEDIR='/volume1'
+
 
 
 
@@ -148,7 +152,7 @@ listit()
 FILE_LIST_ORG=$TMP/allfiles.list.org.$PID
 OLDIFS=$IFS
 IFS=$'\n'
-for each in `find $BASEDIR -type d -not -path "/@*" -not -path "/**/@*" -not -path "*/#recycle" -not -path "*/#recycle/*" 2>/dev/null ` ; do
+for each in `find $BASEDIRS -type d -not -path "/@*" -not -path "/**/@*" -not -path "*/#recycle" -not -path "*/#recycle/*" 2>/dev/null ` ; do
     listit $each  >> $FILE_LIST_ORG
 done
 IFS=$OLDIFS
