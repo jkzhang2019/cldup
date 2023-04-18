@@ -5,30 +5,30 @@ CLean up DUPlicated files: A bash CML script that finds out/cleans up duplicated
 Using Steps
 1. Download the file cldup and make it executable:
 
-     chmod +x cldup
+          chmod +x cldup
    
 2. Edit the the configurations at the top of cldup
 
-     BASEDIR='/volume1'  #The base of the dir tree be scanned for duplicated files. Change it to your dir. The default is for synology NAS volume1.
+          BASEDIR='/volume1'  #The base of the dir tree be scanned for duplicated files. Change it to your dir. The default is for synology NAS volume1.
      
-     FILE_LIST_DB=~/.allfiles.n.db  #specify the name of database file. The default name is OK for most of users.
+          FILE_LIST_DB=~/.allfiles.n.db  #specify the name of database file. The default name is OK for most of users.
      
 3. Run with -u option to create the database. It will take a few minutes to hours, depends on the volume of your files.
 
-     cldup -u
+          cldup -u
 
 4. Once the database was created, you can :
   use -l options to check if a file is a duplicated one.
 
-     cldup -l IMG_3456.JPG
-     cldup -l *
+         cldup -l IMG_3456.JPG
+         cldup -l *
      
-  use curl to clean up (delete with prompt) duplicate files.
+  >> use curl to clean up (delete with prompt) duplicate files.
   
-     cldup IMG_3456.JPG
-     cldup *
+          cldup IMG_3456.JPG
+          cldup *
   
-  use curl -f * to clean up files quickly(delete duplicated files with out prompt).
+  >> use curl -f * to clean up files quickly(delete duplicated files with out prompt).
 
-     cldup -f *.JPG
+          cldup -f *.JPG
     
