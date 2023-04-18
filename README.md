@@ -34,3 +34,11 @@ Using Steps
 
           cldup -f *.JPG
     
+  >> use cldup -u to update the database increasingly at anytime.
+  
+          cldup -u
+    
+  >> sure you can maintain the database and clean up a dir with single command.
+  
+          cldup -uf *
+        
