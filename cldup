@@ -86,7 +86,7 @@ fi
 
 if [ $FLAG_UPDATE -ne 0 ] ; then
 
-echo "Updating databse. It will take a few minutes to hours."
+echo "Updating database. It will take a few minutes to hours."
 
 
 
