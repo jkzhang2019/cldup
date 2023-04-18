@@ -20,7 +20,7 @@ Using Steps
           cldup -u
 
 4. Once the database was created, you can :
-  use -l options to check if a file is a duplicated one.
+  >> use -l options to check if a file is a duplicated one.
 
          cldup -l IMG_3456.JPG
          cldup -l *
