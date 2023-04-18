@@ -25,12 +25,12 @@ Using Steps
          cldup -l IMG_3456.JPG
          cldup -l *
      
-  >> use curl to clean up (delete with prompt) duplicate files.
+  >> use cldup to clean up (delete with prompt) duplicate files.
   
           cldup IMG_3456.JPG
           cldup *
   
-  >> use curl -f * to clean up files quickly(delete duplicated files with out prompt).
+  >> use cldup -f * to clean up files quickly(delete duplicated files with out prompt).
 
           cldup -f *.JPG
     
