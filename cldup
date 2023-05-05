@@ -275,7 +275,7 @@ fi
 done
 
 
-cat $FILE_LIST_NEWDB $TMP/allfiles.db.new.byreuse.$PID  $TMP/allfiles.db.new.byscan.$PID  | sort > $FILE_LIST_DB
+cat $FILE_LIST_NEWDB $TMP/allfiles.db.new.byreuse.$PID  $TMP/allfiles.db.new.byscan.$PID  2>/dev/null | sort > $FILE_LIST_DB
 
 
 
