@@ -274,23 +274,7 @@ if [ -f $eachfile ] ; then
 fi
 done
 
-
 cat $FILE_LIST_NEWDB $TMP/allfiles.db.new.byreuse.$PID  $TMP/allfiles.db.new.byscan.$PID  2>/dev/null | sort > $FILE_LIST_DB
-
-
-
-
-
-#for eachfile in `cat $FILE_LIST_UPDATE`; do
-#if [ -f $eachfile ] ; then
-#
-#    CKSUM=`cksum $eachfile | sed -e "s/^\([0-9]*\) .*/\1/g"`
-#
-#    UPDATESTR=`printf "%0*d" 10 $CKSUM`\|`ls -i -a -Q --full-time $eachfile | sed -e "$sed_exp" `
-#    echo $UPDATESTR >>$FILE_LIST_NEWDB
-#fi
-#done
-#sort $FILE_LIST_NEWDB | uniq > $FILE_LIST_DB
 
 
 IFS=$OLDIFS
