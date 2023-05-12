@@ -11,8 +11,11 @@
 BASEDIRS=('/volume1')    
 
 #2.PATH NAME of the database file(the default name is ok for most users)
-FILE_LIST_DB=~/.allfiles.n.db
+FILE_LIST_DB=~/.allfiles.p.db
 
+#3.SIZE of the file header in byes that be cksumed during database updating.
+#Smaller size for faster database updating, while it makes more possible for different files to be scanned as same and slower duplicated file identifying, for all the files with same checksum in the database will be md5chekcsumed fully.
+PEEK_SIZE=4096
 
 
 
@@ -254,12 +257,12 @@ done
 sed_exp="s/^\s*\([0-9]\+\) .* \([0-9]\+\) \([0-9]\{4\}-.*\) .[0-9]\{4\} .*\"\(.*\)\"/\4|\1|\2|\3/g"
 
 
-for eachfile in `cat $FILE_UPDATE_BYSCAN`; do
-if [ -f $eachfile ] ; then
+for FILENAME in `cat $FILE_UPDATE_BYSCAN`; do
+if [ -f $FILENAME ] ; then
 
-    CKSUM=`cksum $eachfile | sed -e "s/^\([0-9]*\) .*/\1/g"`
+    CHKSUM=`head -c $PEEK_SIZE $FILENAME | cksum |sed -e "s/^\([0-9]*\) .*/\1/g"`
 
-    UPDATESTR=`printf "%0*d" 10 $CKSUM`\|`ls -i -a -Q --full-time $eachfile | sed -e "$sed_exp" `
+    UPDATESTR=`printf "%0*d" 10 $CHKSUM`\|`ls -i -a -Q --full-time $FILENAME | sed -e "$sed_exp" `
     echo $UPDATESTR >>$TMP/allfiles.db.new.byscan.$PID
 fi
 done
@@ -314,9 +317,9 @@ for ((i = $FIRST_FILE_PARAM; i<${#params[@]}; i++)); do
         echo "**************************"
         echo "*** Test File:"$FILENAME
     fi
-    CHKSUMINFO=`cksum "$FILENAME" | sed -e "s/^\([0-9]*\) .*/\1/g"`
+    CHKSUM=`head -c $PEEK_SIZE "$FILENAME" | cksum |sed -e "s/^\([0-9]*\) .*/\1/g"`
    
-    CHKSUM_FILTER=\^`printf "%0*d" 10 $CHKSUMINFO`\|
+    CHKSUM_FILTER=\^`printf "%0*d" 10 $CHKSUM`\|
 
     FILEID=`ls -i "$FILENAME" | sed -e "s/^\([0-9]*\) .*/\1/g"`
     OLDIFS=$IFS
