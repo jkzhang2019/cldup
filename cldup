@@ -131,18 +131,8 @@ listit()
          #for `ls -a -Q --full-time $1`, which as no inode:
          #"s/^.* \([0-9]\+\) \([0-9]\{4\}-.*\) .[0-9]\{4\} .*\"\(.*\)\"/\3|\1|\2/g"
 
-    #echo "<<<<<<<"
-    #echo "1----"
-    #ls -i -a -Q --full-time $1
-    #echo "2----"
-    #ls -i -a -Q --full-time $1 | grep "^\s*[0-9]\+ -"
-    #echo "3----"
-    #ls -i -a -Q --full-time $1 | grep "^\s*[0-9]\+ -" | sed -e "$sed_exp"
-    #echo ">>>>>>>"
     for each in `ls -i -a -Q --full-time $1 | grep "^\s*[0-9]\+ -" | sed -e "$sed_exp" ` ; do
-
         echo $1/$each
-        #echo $1 : $each
     done
 }
 
