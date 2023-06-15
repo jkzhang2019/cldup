@@ -14,7 +14,7 @@ BASEDIRS=('/volume1')
 FILE_LIST_DB=~/.allfiles.p.db
 
 #3.SIZE of the file header in byes that be cksumed during database updating.
-#Smaller size for faster database updating, while it makes more possible for different files to be scanned as same and slower duplicated file identifying, for all the files with same checksum in the database will be md5chekcsumed fully.
+#Smaller size for faster database updating, while it makes more possible for different files to be scanned as same and slower duplicate files identifying, for all the files with same checksum in the database will be md5chekcsumed fully.
 PEEK_SIZE=4096
 
 
@@ -38,10 +38,10 @@ usage()
 {
     echo "$appname: $1"  1>&2
     echo "Usage: $appname [-l] | { [-u] [-f] [-i] } file(s)."  1>&2
-    echo "  -l: List duplicated files only. NOT remove file(s)."  1>&2
+    echo "  -l: List duplicate files only. NOT remove file(s)."  1>&2
     echo "  -u: Update database. It might take a long time of hours."  1>&2
-    echo "  -f: Force clean. No prompt before removing duplicated files."  1>&2
-    echo "  -i: diaplay Information. Print detailed information of duplicated files."  1>&2
+    echo "  -f: Force clean. No prompt before removing duplicate files."  1>&2
+    echo "  -i: diaplay Information. Print detailed information of duplicate files."  1>&2
     echo "  -h: Help."  1>&2
     exit -1
 }
