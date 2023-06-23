@@ -346,7 +346,7 @@ for ((i = $FIRST_FILE_PARAM; i<${#params[@]}; i++)); do
 
             if [ $FILEID -ne $TARGETFILEID ];
             then
-                if [ $MD5=="" ];
+                if [ "$MD5" == "" ];
                 then
                     MD5=`md5sum "$FILENAME" | sed -e 's/\([0-9,a-f]*\) .*/\1/g' `
                 fi
@@ -354,7 +354,7 @@ for ((i = $FIRST_FILE_PARAM; i<${#params[@]}; i++)); do
                 if [ $DEBUG_FLAG -ne 0 ]; then
                     echo 'DEBUG: MD5 and the target MD5 are ' $MD5 ' and ' $TARGET_MD5
                 fi
-                if [ $TARGET_MD5==$MD5 ]; then
+                if [ "$TARGET_MD5" == "$MD5" ]; then
                     let DUPLICATED_FILE_CNT++
                     if [ $FLAG_RICHINFO -ne 0 ]; then
                         echo $FILENAME is duplicated file of $TARGET_FILE_NAME
