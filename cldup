@@ -69,8 +69,8 @@ while getopts "lufih"  opt; do
             FLAG_RICHINFO=1
             ;;
         h)
-            echo "Clean up duplicated files."
-            usage "$appname checks files of duplicated copies based on a database file. The database file is create or updated by scanning the file system(launch $appname with -u option). You need to update the database file for accurate result."
+            echo "Clean up duplicate files."
+            usage "$appname checks files of duplicate copies based on a database file. The database file is create or updated by scanning the file system(launch $appname with -u option). You need to update the database file for accurate result."
             exit 0
             ;;
         *)
@@ -287,7 +287,7 @@ if [ ! -f $FILE_LIST_DB ]; then
 fi
 
 if [ $DEBUG_FLAG -ne 0 ]; then
-    echo 'DEBUG: Begin to check duplicated files'
+    echo 'DEBUG: Begin to check duplicate files'
 fi
 
 
@@ -357,7 +357,7 @@ for ((i = $FIRST_FILE_PARAM; i<${#params[@]}; i++)); do
                 if [ "$TARGET_MD5" == "$MD5" ]; then
                     let DUPLICATED_FILE_CNT++
                     if [ $FLAG_RICHINFO -ne 0 ]; then
-                        echo $FILENAME is duplicated file of $TARGET_FILE_NAME
+                        echo $FILENAME is duplicate file of $TARGET_FILE_NAME
                     fi
                     if [ $FLAG_TESTONLY -eq 0 ]; then
                         rm $RM_OPTION  $FILENAME
