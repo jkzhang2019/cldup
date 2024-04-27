@@ -359,7 +359,7 @@ for ((i = $FIRST_FILE_PARAM; i<${#params[@]}; i++)); do
                     if [ $FLAG_RICHINFO -ne 0 ]; then
                         echo $FILENAME is duplicate file of $TARGET_FILE_NAME
                     fi
-                    if [ $FLAG_TESTONLY -eq 0 ]; then
+                    if [ $FLAG_TESTONLY -eq 0 ] && [ $FLAG_RICHINFO -eq 0 ] ; then
                         rm $RM_OPTION  $FILENAME
                         break
                     fi
@@ -371,6 +371,9 @@ for ((i = $FIRST_FILE_PARAM; i<${#params[@]}; i++)); do
     if  [ $FLAG_RICHINFO -ne 0 ]; then
         if [ $DUPLICATED_FILE_CNT -ne 0 ]; then
             echo "Totally "$DUPLICATED_FILE_CNT" matches found."
+			if [ $FLAG_TESTONLY -eq 0 ]; then
+			    rm $RM_OPTION  $FILENAME
+			fi
         else
             echo "$FILENAME is a distinct file."
         fi
